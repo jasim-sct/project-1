@@ -3,25 +3,25 @@ import { Model } from 'mongoose';
 import { SoftwareTeamDocument } from 'src/schemas/softwareTeam.schema';
 
 @Injectable()
-export class AdminService {
-  private readonly ADMIN_USERNAME = 'jasim@gmail.com';
-  private readonly ADMIN_PASSWORD = 'Jasim@123';
+export class InternalService {
+  private readonly INTERNAL_TEAM_USERNAME = 'jasim@gmail.com';
+  private readonly INTERNAL_TEAM_PASSWORD = 'Jasim@123';
 
   constructor(
     @Inject('SOFTWARE_TEAM_MODEL')
-    private userModel: Model<SoftwareTeamDocument>,
+    private internalTeamModel: Model<SoftwareTeamDocument>,
   ) {}
 
   async login() {
-    let admin = await this.userModel.findOne({
-      username: this.ADMIN_USERNAME,
+    let admin = await this.internalTeamModel.findOne({
+      username: this.INTERNAL_TEAM_USERNAME,
     });
 
     // If admin does not exist → create it
     if (!admin) {
-      admin = await this.userModel.create({
-        username: this.ADMIN_USERNAME, // ✅ consistent
-        password: this.ADMIN_PASSWORD,
+      admin = await this.internalTeamModel.create({
+        username: this.INTERNAL_TEAM_USERNAME, // ✅ consistent
+        password: this.INTERNAL_TEAM_PASSWORD,
       });
 
       return {
@@ -31,13 +31,14 @@ export class AdminService {
     }
 
     // Validate password
-    if (admin.password !== this.ADMIN_PASSWORD) {
+    if (admin.password !== this.INTERNAL_TEAM_PASSWORD) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
     return {
       message: 'Admin login successful',
       adminId: admin._id,
+      Date:new Date().toISOString(),
     };
   }
 }

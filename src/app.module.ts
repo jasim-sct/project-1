@@ -7,7 +7,7 @@ import { appConfig } from './configs/appConfig';
 import { UserModule } from './modules/user/user.module';
 import { DatabaseModule } from './db/database.module';
 import { MongoModelsModule } from './db/mongo-models.module';
-import { AdminModule } from './modules/admin/admin.module';
+import { InternalModule } from './modules/internal/internal.module';
 
 
 @Module({
@@ -20,7 +20,7 @@ import { AdminModule } from './modules/admin/admin.module';
     DatabaseModule,
     MongoModelsModule,
     UserModule,
-    AdminModule
+    InternalModule
   ],
   controllers: [AppController],
   providers: [AppService],
