@@ -9,18 +9,17 @@ import { DatabaseModule } from './db/database.module';
 import { MongoModelsModule } from './db/mongo-models.module';
 import { InternalModule } from './modules/internal/internal.module';
 
-
 @Module({
   imports: [
     ConfigModule.forRoot({
-      isGlobal: true, 
+      isGlobal: true,
       envFilePath: '.env',
       load: [appConfig],
     }),
     DatabaseModule,
     MongoModelsModule,
     UserModule,
-    InternalModule
+    InternalModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -1,6 +1,5 @@
 import * as mongoose from 'mongoose';
 import { Logger } from '@nestjs/common';
-import { readFileSync } from 'fs';
 
 const logger = new Logger('MongoDB');
 
@@ -66,7 +65,7 @@ export const databaseProviders = [
         logger.warn('MongoDB reconnected');
       });
 
-      mongoose.connection.on('error', (err) => {
+      mongoose.connection.on('error', (err: Error) => {
         logger.error('MongoDB error', err?.stack);
       });
 
@@ -85,27 +84,37 @@ export const databaseProviders = [
           logger.log('MongoDB closed cleanly');
           process.exit(0);
         } catch (err) {
-          logger.error('Shutdown error', err?.stack);
+          logger.error(
+            'Shutdown error',
+            err instanceof Error ? err.stack : String(err),
+          );
           process.exit(1);
         }
       };
 
-      process.once('SIGINT', () => gracefulShutdown('SIGINT'));
-      process.once('SIGTERM', () => gracefulShutdown('SIGTERM'));
-      process.once('uncaughtException', async (err) => {
-        logger.error('Uncaught Exception', err?.stack);
-        await gracefulShutdown('uncaughtException');
+      process.once('SIGINT', () => {
+        void gracefulShutdown('SIGINT');
       });
-      process.once('unhandledRejection', async (reason: any) => {
-        logger.error('Unhandled Rejection', reason?.stack || reason);
-        await gracefulShutdown('unhandledRejection');
+      process.once('SIGTERM', () => {
+        void gracefulShutdown('SIGTERM');
+      });
+      process.once('uncaughtException', (err) => {
+        logger.error('Uncaught Exception', err?.stack);
+        void gracefulShutdown('uncaughtException');
+      });
+      process.once('unhandledRejection', (reason: any) => {
+        logger.error(
+          'Unhandled Rejection',
+          reason instanceof Error ? reason.stack : reason,
+        );
+        void gracefulShutdown('unhandledRejection');
       });
 
       for (let attempt = 1; attempt <= maxAttempts; attempt++) {
         try {
           logger.log(`MongoDB connect attempt ${attempt}/${maxAttempts}`);
 
-          const connection = await mongoose.connect(uri, {
+          await mongoose.connect(uri, {
             dbName: MONGO_DB,
             autoIndex: NODE_ENV !== 'production',
             maxPoolSize: parseInt(MONGO_MAX_POOL, 10),
@@ -121,11 +130,10 @@ export const databaseProviders = [
           });
 
           return mongoose.connection;
-
         } catch (error) {
           logger.error(
             `MongoDB attempt ${attempt} failed`,
-            error?.stack,
+            error instanceof Error ? error.stack : String(error),
           );
 
           if (attempt === maxAttempts) {

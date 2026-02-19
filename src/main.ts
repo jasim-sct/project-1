@@ -9,29 +9,30 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module';
 import { createSecurityLayer } from './security/security.layer';
 import { createReliabilityLayer } from './security/reliability.layer';
+import { NextFunction, Request, Response } from 'express';
 
 const logger = new Logger('Bootstrap');
 
 async function bootstrap() {
-  const app =
-    await NestFactory.create<NestExpressApplication>(AppModule, {
-      bufferLogs: true,
-    });
-
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    bufferLogs: true,
+  });
   app.enableShutdownHooks();
 
   /* Security Layer */
   app.use(createSecurityLayer());
 
   /* Health Endpoint (no prefix) */
-  app.getHttpAdapter().getInstance().get('/health', (_req, res) => {
-    res.status(200).json({
-      status: 'ok',
-      uptime: process.uptime(),
-      timestamp: Date.now(),
+  app
+    .getHttpAdapter()
+    .getInstance()
+    .get('/health', (_req, res) => {
+      res.status(200).json({
+        status: 'ok',
+        uptime: process.uptime(),
+        timestamp: Date.now(),
+      });
     });
-  });
-
   /* API Configuration */
   app.setGlobalPrefix('api', {
     exclude: [
@@ -60,13 +61,14 @@ async function bootstrap() {
   );
 
   /* Structured Logging */
-  app.use((req: any, res: any, next: any) => {
+  app.use((req: Request, res: Response, next: NextFunction) => {
     const start = Date.now();
 
     res.on('finish', () => {
       const duration = Date.now() - start;
+
       logger.log(
-        `[${req.requestId}] ${req.method} ${req.originalUrl} ${res.statusCode} - ${duration}ms`,
+        `${req.method} ${req.originalUrl} ${res.statusCode} - ${duration}ms`,
       );
     });
 
@@ -88,11 +90,15 @@ async function bootstrap() {
     server.close(() => process.exit(0));
   };
 
-  process.on('SIGTERM', () => shutdown('SIGTERM'));
-  process.on('SIGINT', () => shutdown('SIGINT'));
+  process.on('SIGTERM', () => {
+    void shutdown('SIGTERM');
+  });
+  process.on('SIGINT', () => {
+    void shutdown('SIGINT');
+  });
 }
 
-bootstrap();
+void bootstrap();
 
 /* Process-Level Fail Fast */
 
@@ -101,7 +107,7 @@ process.on('uncaughtException', (err) => {
   process.exit(1);
 });
 
-process.on('unhandledRejection', (reason: any) => {
+process.on('unhandledRejection', (reason: Error) => {
   console.error('Unhandled Rejection', reason?.stack || reason);
   process.exit(1);
 });

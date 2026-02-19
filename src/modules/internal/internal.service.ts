@@ -1,6 +1,6 @@
 import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { Model } from 'mongoose';
-import { SoftwareTeamDocument } from 'src/schemas/softwareTeam.schema';
+import { SoftwareTeamDocument } from '../../schemas/softwareTeam.schema';
 
 @Injectable()
 export class InternalService {
@@ -38,7 +38,7 @@ export class InternalService {
     return {
       message: 'Admin login successful',
       adminId: admin._id,
-      Date:new Date().toISOString(),
+      Date: new Date().toISOString(),
     };
   }
 }

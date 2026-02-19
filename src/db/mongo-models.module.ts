@@ -5,11 +5,7 @@ import { modelProviders } from './mongo-model.provide';
 @Global()
 @Module({
   imports: [DatabaseModule],
-  providers: [
-    ...modelProviders,
-  ],
-  exports: [
-    ...modelProviders,
-  ],
+  providers: [...modelProviders],
+  exports: [...modelProviders],
 })
 export class MongoModelsModule {}

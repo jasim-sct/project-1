@@ -15,12 +15,11 @@ describe('AppController', () => {
   });
 
   describe('root', () => {
-    it('should return "Hello World!"', () => {
-      expect(appController.getHealth()).toEqual({
-        status: 'ok',
-        message: 'Service is running',
-        timestamp: expect.any(String),
-      });
+    it('should return health object', () => {
+      const result = appController.getHealth();
+      expect(result.status).toBe('ok');
+      expect(result.message).toBe('Service is running');
+      expect(typeof result.timestamp).toBe('string');
     });
   });
 });
