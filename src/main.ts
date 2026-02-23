@@ -1,15 +1,12 @@
 import { NestFactory } from '@nestjs/core';
-import {
-  ValidationPipe,
-  VersioningType,
-  Logger,
-  RequestMethod,
-} from '@nestjs/common';
+import { ValidationPipe, VersioningType, Logger } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module';
 import { createSecurityLayer } from './security/security.layer';
 import { createReliabilityLayer } from './security/reliability.layer';
 import { NextFunction, Request, Response } from 'express';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { randomUUID } from 'crypto';
 
 const logger = new Logger('Bootstrap');
 
@@ -17,10 +14,22 @@ async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     bufferLogs: true,
   });
+  const config = new DocumentBuilder()
+    .setTitle('Software')
+    .setDescription('The Software API description')
+    .setVersion('1.0')
+    .addTag('Software')
+    .build();
+  const documentFactory = () => SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api', app, documentFactory);
   app.enableShutdownHooks();
-
+  app.enableCors();
   /* Security Layer */
-  app.use(createSecurityLayer());
+  createSecurityLayer(app);
+  app.use((req: Request, _res: Response, next: NextFunction) => {
+    req.requestId = randomUUID();
+    next();
+  });
 
   /* Health Endpoint (no prefix) */
   app
@@ -35,11 +44,11 @@ async function bootstrap() {
     });
   /* API Configuration */
   app.setGlobalPrefix('api', {
-    exclude: [
-      { path: '/', method: RequestMethod.ALL },
-      { path: 'health', method: RequestMethod.ALL },
-      { path: 'client/(.*)', method: RequestMethod.ALL }, // client website (no /api)
-    ],
+    // exclude: [
+    //   { path: '/', method: RequestMethod.ALL },
+    //   { path: 'health', method: RequestMethod.ALL },
+    //   { path: 'client/(.*)', method: RequestMethod.ALL }, // client website (no /api)
+    // ],
   });
 
   app.enableVersioning({
@@ -68,7 +77,7 @@ async function bootstrap() {
       const duration = Date.now() - start;
 
       logger.log(
-        `${req.method} ${req.originalUrl} ${res.statusCode} - ${duration}ms`,
+        `[${req.requestId}] ${req.method} ${req.originalUrl} ${res.statusCode} - ${duration}ms`,
       );
     });
 

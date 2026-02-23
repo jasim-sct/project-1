@@ -3,14 +3,14 @@ import type { Request, Response, NextFunction } from 'express';
 export function createReliabilityLayer() {
   return function (
     err: unknown,
-    req: Request,
+    _req: Request,
     res: Response,
-    _next: NextFunction,
+    next: NextFunction,
   ) {
     console.error('Unhandled error:', err);
 
     if (res.headersSent) {
-      return;
+      return next(err);
     }
 
     res.status(500).json({

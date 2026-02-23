@@ -8,6 +8,7 @@ import { UserModule } from './modules/user/user.module';
 import { DatabaseModule } from './db/database.module';
 import { MongoModelsModule } from './db/mongo-models.module';
 import { InternalModule } from './modules/internal/internal.module';
+import { Throttler } from './security/throttler.layer';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { InternalModule } from './modules/internal/internal.module';
       envFilePath: '.env',
       load: [appConfig],
     }),
+    Throttler,
     DatabaseModule,
     MongoModelsModule,
     UserModule,
